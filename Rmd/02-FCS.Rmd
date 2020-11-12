@@ -1,0 +1,791 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Issues in multivariate imputation {#sec:issues}
+
+Most imputation models for $Y_j$ use the remaining columns $Y_{-j}$ as
+predictors. The rationale is that conditioning on $Y_{-j}$ preserves the
+relations among the $Y_j$ in the imputed data. identified various
+practical problems that can occur in multivariate missing data:
+
+-   The predictors $Y_{-j}$ themselves can contain missing
+    values;
+
+-   “Circular” dependence can occur, where $Y_j^\mathrm{mis}$
+    depends on $Y_h^\mathrm{mis}$, and $Y_h^\mathrm{mis}$ depends on
+    $Y_j^\mathrm{mis}$ with $h \neq j$, because in general $Y_j$ and
+    $Y_h$ are correlated, even given other variables;
+
+-   Variables are often of different types (e.g., binary,
+    unordered, ordered, continuous), thereby making the application of
+    theoretically convenient models, such as the multivariate normal,
+    theoretically inappropriate;
+
+-   Especially with large $p$ and small $n$, collinearity or empty
+    cells can occur;
+
+-   The ordering of the rows and columns can be meaningful, e.g.,
+    as in longitudinal data;
+
+-   The relation between $Y_j$ and predictors $Y_{-j}$ can be
+    complex, e.g., nonlinear, or subject to censoring processes;
+
+-   Imputation can create impossible combinations, such as
+    pregnant fathers.
+
+This list is by no means exhaustive, and other complexities may appear
+for particular data. The next sections discuss three general strategies
+for imputing multivariate data:
+
+1.  *Monotone data imputation*. For monotone missing data
+    patterns, imputations are created by a sequence of univariate
+    methods;
+
+2.  *Joint modeling*. For general patterns, imputations are drawn
+    from a multivariate model fitted to the data;
+
+3.  *Fully conditional specification*, also known as *chained
+    equations* and *sequential regressions*. For general patterns, a
+    multivariate model is implicitly specified by a set of conditional
+    univariate models. Imputations are created by drawing from iterated
+    conditional models.
+
+
+## Fully conditional specification {#sec:FCS}
+
+### Overview {#overview-3}
+
+Fully conditional specification (FCS) imputes multivariate missing data
+on a variable-by-variable basis [@VANBUUREN2006; @VANBUUREN2007]. The
+method requires a specification of an imputation model for each
+incomplete variable, and creates imputations per variable in an
+iterative fashion.
+
+In contrast to joint modeling, FCS specifies the multivariate
+distribution $P(Y, X, R|\theta)$ through a set of conditional
+densities $P(Y_j | X, Y_{-j}, R, \phi_j)$. This conditional density is
+used to impute $Y_j$ given $X$, $Y_{-j}$ and $R$. Starting from simple
+random draws from the marginal distribution, imputation under FCS is
+done by iterating over the conditionally specified imputation models.
+The methods of Chapter \@ref(ch:univariate) may act as building
+blocks. FCS is a natural generalization of univariate imputation.
+
+@RUBIN1987 [pp. 160–166] subdivided the work needed to create
+imputations into three tasks. The *modeling task* chooses a specific
+model for the data, the *estimation task* formulates the posterior
+parameters distribution given the model and the *imputation task* takes
+a random draws for the missing data by drawing successively from
+parameter and data distributions. FCS directly specifies the conditional
+distributions from which draws should be made, and hence bypasses the
+need to specify a multivariate model for the data.
+
+The idea of conditionally specified models is quite old. Conditional
+probability distributions follow naturally from the theory of stochastic
+Markov chains [@BARTLETT1978 pp. 34–41, pp. 231–236]. In the context of
+spatial data, Besag preferred the use of conditional probability models
+over joint probability models, since “the conditional probability
+approach has greater intuitive appeal to the practising statistician”
+[@BESAG1974 p. 223].
+
+In the context of missing data imputation, similar ideas have surfaced
+under a variety of names: stochastic relaxation [@KENNICKELL1991],
+variable-by-variable imputation [@BRAND1999], switching regressions
+[@VANBUUREN1999], sequential regressions [@RAGHUNATHAN2001], ordered
+pseudo-Gibbs sampler [@HECKERMAN2001], partially incompatible MCMC
+[@RUBIN2003], iterated univariate imputation [@GELMAN2004], chained
+equations [@VANBUUREN2000] and fully conditional specification (FCS)
+[@VANBUUREN2006].
+
+
+There are several ways to implement imputation under conditionally
+specified models. Algorithm \@ref(def:mice) describes one particular
+instance: the MICE algorithm [@VANBUUREN2000; @VANBUUREN2011B]. The
+algorithm starts with a random draw from the observed data, and imputes
+the incomplete data in a variable-by-variable fashion. One iteration
+consists of one cycle through all $Y_j$. The number of iterations $M$
+can often be low, say 5 or 10. The MICE algorithm generates multiple
+imputations by executing Algorithm \@ref(def:mice) in parallel $m$ times.
+
+The MICE algorithm is a Markov chain Monte Carlo (MCMC) method, where
+the state space is the collection of all imputed values. More
+specifically, if the conditionals are compatible (cf. Section
+\@ref(sec:compatibility)), the MICE algorithm is a Gibbs sampler, a
+Bayesian simulation technique that samples from the conditional
+distributions in order to obtain samples from the joint distribution
+[@GELFAND1990; @CASELLA1992]. In conventional applications of the Gibbs
+sampler, the full conditional distributions are derived from the joint
+probability distribution [@GILKS1996B]. In the MICE algorithm, the
+conditional distributions are under direct control of the user, and so
+the joint distribution is only implicitly known, and may not actually
+exist. While the latter is clearly undesirable from a theoretical point
+of view (since we do not know the joint distribution to which the
+algorithm converges), in practice it does not seem to hinder useful
+applications of the method (cf. Section \@ref(sec:compatibility)).
+
+In order to converge to a stationary distribution, a Markov chain needs
+to satisfy three important properties [@ROBERTS1996; @TIERNEY1996]:
+
+-   *irreducible*, the chain must be able to reach all interesting
+    parts of the state space;
+
+-   *aperiodic*, the chain should not oscillate between different
+    states;
+
+-   *recurrence*, all interesting parts can be reached infinitely
+    often, at least from almost all starting points.
+
+Do these properties hold for the MICE algorithm? Irreducibility is
+generally not a problem since the user has large control over the
+interesting parts of the state space. This flexibility is actually the
+main rationale for FCS instead of a joint model.
+
+Periodicity is a potential problem, and can arise in the situation where
+imputation models are clearly inconsistent. A rather artificial example
+of an oscillatory behavior occurs when $Y_1$ is imputed by
+$Y_2\beta+\epsilon_1$ and $Y_2$ is imputed by $-Y_1\beta+\epsilon_2$ for
+some fixed, nonzero $\beta$. The sampler will oscillate between two
+qualitatively different states, so the correlation between $Y_1$ and
+$Y_2$ after imputing $Y_1$ will differ from that after imputing $Y_2$.
+In general, we would like the statistical inferences to be independent
+of the stopping point. A way to diagnose the *ping-pong* problem, or
+*order effect*, is to stop the chain at different points. The stopping
+point should not affect the statistical inferences. The addition of
+noise to create imputations is a safeguard against periodicity, and
+allows the sampler to “break out” more easily.
+
+Non-recurrence may also be a potential difficulty, manifesting itself as
+explosive or non-stationary behavior. For example, if imputations are
+made by deterministic functions, the Markov chain may lock up. Such
+cases can sometimes be diagnosed from the trace lines of the sampler.
+See Section \@ref(sec:convergence) for an example. As long as the
+parameters of imputation models are estimated from the data,
+non-recurrence is mild or absent.
+
+The required properties of the MCMC method can be translated into
+conditions on the eigenvalues of the matrix of transition probabilities
+[@MACKAY2003 pp. 372–373]. The development of practical tools that put
+these conditions to work for multiple imputation is still an ongoing
+research problem.
+
+### Compatibility$^\spadesuit$ {#sec:compatibility}
+
+Gibbs sampling is based on the idea that knowledge of the conditional
+distributions is sufficient to determine a joint distribution, if it
+exists. Two conditional densities $p(Y_1|Y_2)$ and $p(Y_2|Y_1)$ are said
+to be *compatible* if a joint distribution $p(Y_1,Y_2)$ exists that has
+$p(Y_1|Y_2)$ and $p(Y_2|Y_1)$ as its conditional densities. More
+precisely, the two conditional densities are compatible if and only if
+their density ratio $p(Y_1|Y_2)/p(Y_2|Y_1)$ factorizes into the product
+$u(Y_1)v(Y_2)$ for some integrable functions $u$ and $v$ [@BESAG1974].
+So, the joint distribution either exists and is unique, or does not
+exist.
+
+If the joint density itself is of genuine scientific interest, we should
+carefully evaluate the effect that imputations might have on the
+estimate of the distribution. For example, incompatible conditionals
+could produce a ridge (or spike) in an otherwise smooth density, and the
+location of the ridge may actually depend on the stopping point. If such
+is the case, then we should have a reason to favor a particular stopping
+point. Alternatively, we might try to reformulate the imputation model
+so that the order effect disappears.
+
+@ARNOLD1989 and @ARNOLD1999 provide necessary and sufficient conditions
+for the existence of a joint distribution given two conditional
+densities. @GELMAN1993 concentrate on the question whether an arbitrary
+mix of conditional and marginal distribution yields a unique joint
+distribution. @ARNOLD2002 describe near-compatibility in discrete data.
+
+Several papers are now available on the conditions under which
+imputations created by conditionally specified models are draws from the
+implicit joint distribution. According to @HUGHES2014, two conditions
+must hold for this to occur. First, the conditionals must be compatible,
+and second the margin must be noninformative. Suppose that $p(\phi_j)$
+is the prior distribution of the set of parameters that relate $Y_j$ to
+$Y_{-j}$, and that $p(\tilde\phi_j)$ is prior distribution of the set of
+parameters that describes that relations among the $Y_{-j}$. The
+noninformative margins condition states that if two sets of parameters
+are distinct (i.e., their joint parameter space is the product of their
+separate parameter spaces), and their joint distribution
+$p(\phi_j, \tilde\phi_j)$ are independent and factorizes as
+$p(\phi_j, \tilde\phi_j) = p(\phi_j)p(\tilde\phi_j)$. Independence is a
+property of the prior distributions, whereas distinctness is a property
+of the model. @HUGHES2014 show that distinctness holds for the saturated
+multinomial distribution with a Dirichlet prior, so imputations from
+this joint distribution can be achieved by a set of conditionally
+specified models. However, for the log-linear model with only two-way
+factor interaction (and no higher-order terms) distinctness only holds
+for a maximum of three variables. The noninformative marginal condition
+is sufficient, but not necessary. In most practical cases we are unable
+to show that the noninformative marginal condition holds, but we can
+stop the algorithms at different points and inspect the estimates for
+order effect. Simulations by @HUGHES2014 show that such order effects
+exist, but in general they are small. @LIU2013 made the same division in
+the parameter space of compatible models, and showed that imputation
+created by conditional specification is asymptotically equivalent to
+full Bayesian imputation for an assumed joint model. Asymptotic
+equivelance assumes infinite $m$ and infinite $n$, and holds when the
+joint model is misspecified. The order effect disappear with increasing
+sample size. @ZHU2015 observed that the parameters of the conditionally
+specified models typically span a larger space than the space occupied
+by the implied joint model. A set of imputation models is *possibly
+compatible* if the conditional density for each variable $j$ according
+to some joint distribution is a special case of the corresponding
+imputation model for $j$. If the parameters of the joint model can be
+separated, then iteration over the possible compatible conditional
+imputation models will provide draws from the conditional densities of
+the implied joint distribution.
+
+Several methods for identifying compatibility from actual data have been
+developed [@TIAN2009; @IP2009; @WANG2010A; @CHEN2011B; @YAO2014; @KUO2017].
+However, the application of these methods is challenging because of the
+many possible choices of conditional models. What happens when the joint
+distribution does not exist? The MICE algorithm is ignorant of the
+non-existence of the joint distribution, and happily produces
+imputations whether the joint distribution exists or not. Can the
+imputed data be trusted when we cannot find a joint distribution
+$p(Y_1,Y_2)$ that has $p(Y_1|Y_2)$ and $p(Y_2|Y_1)$ as its conditionals?
+
+Incompatibility easily arises if deterministic functions of the data are
+imputed along with their originals. For example, the imputation model
+may contain interaction terms, data summaries or nonlinear functions of
+the data. Such terms introduce feedback loops and impossible
+combinations into the system, which can invalidate the imputations
+[@VANBUUREN2011B]. It is important to diagnose this behavior and
+eliminate feedback loops from the system. Chapter \@ref(ch:practice)
+describes the tools to do this.
+
+@VANBUUREN2006 described a small simulation study using strongly
+incompatible models. The adverse effects on the estimates after
+multiple imputation were only minimal in the cases studied. Though FCS
+is only guaranteed to work if the conditionals are compatible, these
+simulations suggested that the results may be robust against
+violations of compatibility. @LI2012 presented three examples of
+problems with MICE. However, their examples differ from the usual
+sequential regression setup in various ways, and do not undermine the
+validity of the approach [@ZHU2015]. @LIU2013 pointed out that
+application of incompatible conditional models cannot provide
+imputations from any joint model. However, they also found that
+Rubin’s rules provide consistent point estimates for incompatible
+models under fairly general conditions, as long as each conditional
+model was correctly specified. @ZHU2015 showed that incompatibility
+does not need to lead to divergence. While there is no joint model to
+converge to, the algorithm can still converge. The key in achieving
+convergence is that the imputation models should closely model the
+data. For example, include the skewness of the residuals, or ideally,
+generate the imputations from the underlying (but usually unknown)
+mechanism that generated the data.
+
+The interesting point is that the last two papers have shifted the
+perspective from the user’s joint model to the data producer’s data
+generating model. With incompatible models, the most important condition
+is the validity of each conditional model. As long as the conditional
+models are able to replay the missing data according to the mechanism
+that generated the data, we might not be overly concerned with issues of
+compatibility.
+
+In the majority of cases, scientific interest will focus on quantities
+that are more remote to the joint density, such as regression weights,
+factor loadings, prevalence estimates and so on. In such cases, the
+joint distribution is more like a nuisance factor that has no intrinsic
+value.
+
+Apart from potential feedback problems, it appears that incompatibility
+seems like a relatively minor problem in practice, especially if the
+missing data rate is modest and the imputation models fit the data well.
+In order to evaluate these aspects, we need to inspect convergence and
+assess the fit of the imputations.
+
+### Congeniality or compatibility? {#sec:congeniality}
+
+@MENG1994 introduced the concept of *congeniality* to refer to the
+relation between the imputation model and the analysis model. Some
+recent papers have used the term *compatibility* to refer to essentially
+the same concept, and this alternative use of the term compatibility may
+generate confusion. This section explains the two different meanings
+attached to the compatibility.
+
+Compatibility refers to the property that the conditionally specified
+models together specify some joint distribution from which imputations
+are to be drawn. Compatibility is a theoretical requirement of the Gibbs
+sampler. The evidence obtained thus far indicated that mutual
+incompatibility of conditionals will only have a minor impact on the
+final inferences, as long as the conditional models are well specified
+to fit the data. See Section \@ref(sec:compatibility) for more detail.
+
+Another use of compatibility refers to the relation between the
+substantive model and the imputation model. It is widely accepted that
+the imputation model should be more general than the substantive model.
+@MENG1994 stated that the analysis procedure should be congenial to the
+imputation model, where congeniality is a property of the analysis
+procedure. @BARTLETT2015 connected congeniality to compatibility by
+extending the joint distribution of the imputation model to include the
+substantive model. @BARTLETT2015 reasoned that an imputation model is
+congenial to the substantive model if the two models are compatible. In
+that case, a joint model exists whose conditionals include both the
+imputation and substantive model. Models that are incompatible may lead
+to biased estimates of parameters in the substantive model. Hence,
+incompatibility is a bad thing that should be prevented. Technically
+speaking, the use of the term compatibility is correct, but the
+interpretation and implications of this form of incompatibility are very
+different, and in fact close in spirit to Meng’s congeniality.
+
+This book reserves the term *compatibility* to refer to the property of
+the imputation model whether its parts make up a joint distribution
+(irrespective of an analysis model), and use the term *congeniality* to
+refer to the relation between the imputation model and the substantive
+model.
+
+### Model-based and data-based imputation {#sec:modelbased}
+
+This section highlights an interesting new development for setting up
+imputation models.
+
+Observe that @BARTLETT2015 reversed the direction of of the relation
+between the imputation and substantive models. @MENG1994 takes a given
+imputation model, and then asks whether the analysis model is congenial
+to it, whereas @BARTLETT2015 start from the complete-data model, and ask
+whether the imputation model is congenial/compatible. These are
+complementary perspectives, leading to different strategies in setting
+up imputation models. If there is a strong scientific model, then it is
+natural to use model-based imputation, which puts the substantive model
+in the driver’s seat, and ensures that the distribution from which
+imputations are generated is compatible to the substantive model. The
+challenge here is to create imputations that remain faithful to the
+data, and do not amplify aspects assumed in the model that are not
+supported by the data. If there is weak scientific theory, or if a wide
+range of models is fitted, then apply data-based imputation, where
+imputations are generated that closely represent the features of the
+data, without any particular analysis model in mind. Then the challenge
+is to create imputations that will accommodate for a wide range of
+substantive models.
+
+The model-based approach is theoretically well grounded, and
+procedures are available for substantive models based on normal
+regression, discrete outcomes and proportional hazards. Related work
+can be found in @WU2010, @GOLDSTEIN2014, @ERLER2016, @ERLER2018 
+and @ZHANG2017. Some simulations showed promising results [@GRUND2018]. 
+Implementations in `R` are available as the `smcfcs` package
+[@BARTLETT2018], and the `mdmb` package [@ROBITZSCH2018], as well as
+`Blimp` [@ENDERS2018]. One potential drawback is that the imputations
+might be specific to the model at hand, and need to be redone if the
+model changes. Another potential issue could be the calculations
+needed, which requires the use of rejection samplers. There is not yet
+much experience with such practicalities, but a method that approaches
+the imputation problem “from the other side” is an interesting and
+potentially useful addition to the imputer’s toolbox.
+
+### Number of iterations {#sec:howlarget}
+
+When $m$ sampling streams are calculated in parallel, monitoring
+convergence is done by plotting one or more statistics of interest in
+each stream against iteration number $t$. Common statistics to be
+plotted are the mean and standard deviation of the synthetic data, as
+well as the correlation between different variables. The pattern
+should be free of trend, and the variance within a chain should
+approximate the variance between chains.
+
+In practice, a low number of iterations appears to be enough.
+@BRAND1999 and @VANBUUREN1999 set the number of iterations $M$ quite
+low, usually somewhere between 5 to 20 iterations. This number is much
+lower than in other applications of MCMC methods, which often require
+thousands of iterations.
+
+Why can the number of iterations in MICE be so low? First of all,
+realize that the imputed data $\dot Y_\mathrm{mis}$ form the only
+memory in the the MICE algorithm. Chapter \@ref(ch:univariate)
+explained that imputed data can have a considerable amount of random
+noise, depending on the strength of the relations between the
+variables. Applications of MICE with lowly correlated data therefore
+inject a lot of noise into the system. Hence, the autocorrelation over
+$t$ will be low, and convergence will be rapid, and in fact immediate
+if all variables are independent. Thus, the incorporation of noise
+into the imputed data has pleasant side-effect of speeding up
+convergence. Reversely, situations to watch out for occur if:
+
+-   the correlations between the $Y_j$’s are high;
+
+-   the missing data rates are high; or
+
+-   constraints on parameters across different variables exist.
+
+The first two conditions directly affect the amount of autocorrelation
+in the system. The latter condition becomes relevant for customized
+imputation models. We will see some examples in Section
+\@ref(sec:convergence).
+
+In the context of missing data imputation, our simulations have shown
+that unbiased estimates and appropriate coverage usually requires no
+more than just five iterations. It is, however, important not to rely
+automatically on this result as some applications can require
+considerably more iterations.
+
+### Example of slow convergence {#sec:slowconvergence}
+
+Consider a small simulation experiment with three variables: one
+complete covariate $X$ and two incomplete variables $Y_1$ and $Y_2$.
+The data consist of draws from the multivariate normal distribution
+with correlations $\rho(X,Y_1)= \rho(X,Y_2)=0.9$ and $\rho(Y_1,Y_2) =
+0.7$. The variables are ordered as $[X, Y_1, Y_2]$. The complete
+pattern is $R_1=(1, 1, 1)$. Missing data are randomly created in two
+patterns: $R_2=(1, 0, 1)$ and $R_3=(1, 1, 0)$. Variables $Y_1$ and
+$Y_2$ are jointly observed on $n_{(1,1,1)}$ complete cases. The
+following code defines the function to generate the incomplete data.
+
+```{r slow1}
+```
+
+As an imputation model, we specified compatible linear regressions
+$Y_1= \beta_{1,0} + \beta_{1,2}Y_2 + \beta_{1,3}X + \epsilon_1$ and
+$Y_2= \beta_{2,0} + \beta_{2,1}Y_1 + \beta_{2,3}X + \epsilon_2$ to
+impute $Y_1$ and $Y_2$. The following code defines the function used
+for imputation.
+
+```{r slow2}
+```
+
+The difficulty in this particular problem is that the correlation
+$\rho(Y_1,Y_2)$ under the conditional independence of $Y_1$ and $Y_2$
+given $X$ is equal to $0.9 \times 0.9 = 0.81$, whereas the true value
+equals $0.7$. It is thus of interest to study how the correlation
+$\rho(Y_1,Y_2)$ develops over the iterations, but this is not a
+standard function in `mice()`. As an alternative, the `impute()`
+function repeatedly calls `mice.mids()` with `maxit = 1`, and
+calculates $\rho(Y_1, Y_2)$ after each iteration from the complete
+data.
+
+The following code defines six scenarios where the number of complete
+cases is varied as $n_{(1,1,1)} \in \{1000, 500, 250, 100, 50, 0\}$,
+while holding the total sample size constant at $n = 10000$. The
+proportion of complete rows thus varies between 10% and 0%.
+
+```{r slow3}
+```
+
+The `simulate()` function code collects the correlations
+$\rho(Y_1,Y_2)$ per iteration in the data frame `s`. Now call the
+function with
+
+```{r slow4, cache = TRUE}
+```
+
+```{r slowplot2, echo=FALSE, fig.asp=5/7, fig.cap = '(ref:slowplot2)'}
+```
+
+(ref:slowplot2) Correlation between $Y_1$ and $Y_2$ in the imputed data
+per iteration in five independent runs of the MICE algorithm for six
+levels of missing data. The true value is 0.7. The figure illustrates
+that convergence can be slow for high percentages of missing data.
+
+Figure \@ref(fig:slowplot) shows the development of $\rho(Y_1,Y_2)$
+calculated on the completed data after every iteration of the MICE
+algorithm. At iteration 1, $\rho(Y_1,Y_2)$ is approximately 0.81, the
+value expected under independence of $Y_1$ and $Y_2$, conditional on
+$X$. The influence of the complete records with both $Y_1$ and $Y_2$
+observed percolates into the imputations, so that the chains slowly
+move into the direction of the population value of 0.7. The speed of
+convergence heavily depends on the number of missing cases. For 90% or
+95% missing data, the streams are essentially flat after about 15–20
+iterations. As the percentage of missing data increases, more and more
+iterations are needed before the true correlation of 0.7 trickles
+through. In the extreme cases with 100% missing data, the correlation
+$\rho(Y_1,Y_2)$ cannot be estimated due to lack of information in the
+data. In this case, the different streams do not converge at all, and
+wander widely within the Cauchy–Schwarz bounds (0.6 to 1.0 here). But
+even here we could argue that the sampler has essentially converged.
+We could stop at iteration 200 and take the imputations from there.
+From a Bayesian perspective, this still would yield an essentially
+correct inference about $\rho(Y_1,Y_2)$, being that it could be
+anywhere within the Cauchy–Schwarz bounds. So even in this
+pathological case with 100% missing data, the results look sensible as
+long as we account for the wide variability.
+
+The lesson we can learn from this simulation is that we should be
+careful about convergence in missing data problems with high
+correlations and high missing data rates. At the same time, observe
+that we really have to push the MICE algorithm to its limits to see
+the effect. Over 99% of real data will have lower correlations and
+lower missing data rates. Of course, it never hurts to do a couple of
+extra iterations, but my experience is that good results can often be
+obtained with a small number of iterations.
+
+### Performance {#performance}
+
+Each conditional density has to be specified separately, so FCS
+requires some modeling effort on the part of the user. Most software
+provides reasonable defaults for standard situations, so the actual
+effort required may be small. A number of simulation studies provide
+evidence that FCS generally yields estimates that are unbiased and
+that possess appropriate coverage [@BRAND1999; @RAGHUNATHAN2001;
+@BRAND2003; @TANG2005; @VANBUUREN2006; @HORTON2007; @YU2007].
+
+## FCS and JM
+
+### Relations between FCS and JM
+
+FCS is related to JM in some special cases. If $P(X, Y)$ has a
+multivariate normal model distribution, then all conditional densities
+are linear regressions with a constant normal error variance. So, if
+$P(X, Y)$ is multivariate normal then $P(Y_j | X, Y_{-j})$ follows a
+linear regression model. The reverse is also true: If the imputation
+models $P(Y_j | X, Y_{-j})$ are all linear with constant normal error
+variance, then the joint distribution will be multivariate normal. See
+@ARNOLD1999 [p. 186] for a description of the precise conditions.
+Thus, imputation by FCS using all linear regressions is identical to
+imputation under the multivariate normal model.
+
+Another special case occurs for binary variables with only two-way
+interactions in the log-linear model. In the special case $p=3$
+suppose that $Y_1,\dots,Y_3$ are modeled by the log-linear model that
+has the three-way interaction term set to zero. It is known that the
+corresponding conditional distribution $P(Y_1|Y_2,Y_3)$ is the
+logistic regression model $\log(P(Y_1)/1-P(Y_1)) = \beta_0 +
+\beta_2Y_2 + \beta_3Y_3$ [@GOODMAN1970]. Analogous definitions exist
+for $P(Y_2|Y_1,Y_3)$ and $P(Y_3|Y_1,Y_2)$. This means that if we use
+logistic regressions for $Y_1$, $Y_2$ and $Y_3$, we are effectively
+imputing under the multivariate “no three-way interaction” log-linear
+model. @HUGHES2014 showed that this relation does not extend to more
+than three variables.
+
+### Comparisons
+
+FCS cannot use computational shortcuts like the sweep operator, so the
+calculations per iterations are more intensive than under JM. Also, JM
+has better theoretical underpinnings.
+
+On the other hand, FCS allows tremendous flexibility in creating
+multivariate models. One can easily specify models that are outside
+any known standard multivariate density $P(X, Y, R|\theta)$. FCS can
+use specialized imputation methods that are difficult to formulate as
+a part of a multivariate density $P(X, Y, R |\theta)$. Imputation
+methods that preserve unique features in the data, e.g., bounds, skip
+patterns, interactions, bracketed responses and so on can be
+incorporated. It is possible to maintain constraints between different
+variables in order to avoid logical inconsistencies in the imputed
+data that would be difficult to do as part of a multivariate density
+$P(X, Y, R |\theta)$.
+
+@LEE2010 found that JM performs as well as FCS, even in the presence of
+binary and ordinal variables. These authors also observed substantial
+improvements for skewed variables by transforming the variable to
+symmetry (for JM) or by using predictive mean matching (for FCS).
+@KROPKO2014 found that JM and FCS performed about equally well for
+continuous and binary variable, but FCS outperforms JM on every metric
+when the variable of interest is categorical. With predictive mean
+matching, FCS outperforms JM “for every metric and variable type,
+including the continuous variable.” @SEAMAN2016 compared FCS to a
+restricted general location model. As expected, the latter model is more
+efficient when correctly specified, but the gains are small unless the
+relations between the variables are very strong. As FCS was found to be
+more robust under misspecification, the authors advise FCS over JM.
+
+### Illustration
+
+The Fourth Dutch Growth Study by @FREDRIKS2000B collected data on
+14500 Dutch children between 0 and 21 years. The development of
+secondary pubertal characteristics was measured by the so-called
+Tanner stages, which divides the continuous process of maturation into
+discrete stages for the ages between 8 and 21 years. Pubertal stages
+of boys are defined for genital development (`gen`: five ordered
+stages G1–G5), pubic hair development (`phb`: six ordered stages
+P1–P6) and testicular volume (`tv`: 1–25ml).
+
+We analyze the subsample of 424 boys in the age range 8–21years using
+the `boys` data in `mice`. There were 180 boys (42%) for which scores
+for genital development were missing. The missingness was strongly
+related to age, rising from about 20% at ages 9–11 years to 60%
+missing data at ages 17–20 years.
+
+The data consist of three complete covariates: age (`age`), height
+(`hgt`) and weight (`wgt`), and three incomplete outcomes measuring
+maturation. The following code block creates $m = 10$ imputations by
+the normal model, by predictive mean matching and by the proportional
+odds model.
+
+```{r pubimpjm, cache = TRUE}
+```
+
+Figure \@ref(fig:pubfigjm2) plots the results of the first five imputations from
+the normal model. It was created by the following statement:
+
+```{r pubfigjm2, fig.asp=5/6, fig.cap = '(ref:pubfigjm2)'}
+```
+
+(ref:pubfigjm2) Joint modeling: Imputed data for genital development
+(Tanner stages G1–G5) under the multivariate normal model. The panels
+are labeled by the imputation numbers 0–5, where 0 is the observed
+data and 1–5 are five multiply imputed datasets.
+
+The figure portrays how genital development depends on age for both
+the observed and imputed data. The spread of the synthetic values in
+Figure \@ref(fig:pubfigjm2) is larger than the observed data range. The
+observed data are categorical while the synthetic data vary
+continuously. Note that there are some negative values in the
+imputations. If we are to do categorical data analysis on the imputed
+data, we need some form of rounding to make the synthetic values
+comparable with the observed values.
+
+```{r pubfigfcs2, echo = FALSE, fig.asp=5/6, fig.cap = '(ref:pubfigfcs2)'}
+```
+
+(ref:pubfigfcs2) Fully conditional specification: Imputed data of
+genital development (Tanner stages G1–G5) under the proportional odds
+model.
+
+Imputations for the proportonal odds model in Figure \@ref(fig:pubfigfcs2)
+differ markedly from those in Figure \@ref(fig:pubfigjm2). This model yields
+imputations that are categorical, and hence no rounding is needed.
+
+```{r pubfig2b, echo=FALSE, cache = TRUE, fig.asp = 1, fig.cap = '(ref:pubfigb2)'}
+```
+
+(ref:pubfig2b) Probability of achieving stages G2–G5 of genital
+developmental by age (in years) under four imputation methods
+($m=10$).
+
+The complete-data model describes the probability of achieving each
+Tanner stage as a nonlinear function of age according to the model
+proposed in @VANBUUREN2009A. The calculations are done with `gamlss`
+[@STASINOPOULOS2007]. Under the assumption of ignorability, analysis
+of the complete cases will not be biased, so the complete-case
+analysis provides a handle to the appropriate solution. The blue lines
+in Figure \@ref(fig:pubfig2) indicate the model fitted on the complete
+cases, whereas the thin black lines correspond to the analyses of the
+10 imputed datasets.
+
+The different panels of Figure \@ref(fig:pubfig2b) corresponds to
+different imputation methods. The panel labeled *JM: multivariate
+normal* contains the model fitted to the unprocessed imputed data
+produced under the multivariate normal model. There is a large
+discrepancy between the complete-case analysis and the models fitted
+to the imputed data, especially for the older boys. The fit improves
+in the panel labeled *JM: rounded*, where imputed data are rounded to
+the nearest category. There is considerable misfit, and the behavior
+of the imputed data around the age of 10years is a bit curious. The
+panel labeled *FCS: predictive mean matching* applied Algorithm
+\@ref(def:pmm) as a component of the MICE algorithm. Though this
+technique improves upon the previous two methods, some discrepancies
+for the older boys remain. The panel labeled *FCS: proportional odds*
+displays the results after applying the method for ordered categorical
+data as discussed in Section \@ref(sec:categorical). The imputed data
+essentially agree with the complete-case analysis, perhaps apart from
+some minor deviations around the probability level of 0.9.
+
+Figure \@ref(fig:pubfig2b) shows clear differences between FCS and JM
+when data are categorical. Although rounding may provide reasonable
+results in particular datasets, it seems that it does more harm than
+good here. There are many ways to round, rounding may require
+unrealistic assumptions and it will attenuate correlations.
+@HORTON2003, @AKE2005 and @ALLISON2005 recommend against rounding when
+data are categorical. See Section \@ref(sec:jmcategorical).
+@HORTON2003 expected that bias problems of rounding would taper off if
+variables have more than two categories, but the analysis in this
+section suggests that JM may also be biased for categorical data with
+more than two categories. Even though it may sound a bit trivial, my
+recommendation is: Impute categorical data by methods for categorical
+data.
+
+## MICE extensions
+
+The MICE algorithm listed in box \@ref(def:mice) can be extended in
+several ways.
+
+### Skipping imputations and overimputation
+
+By default, the MICE algorithm imputes the missing data, and leaves
+the observed data untouched. In some cases it may also be useful to
+skip imputation of certain cells. For example, we wish to skip
+imputation of quality of life for the deceased, or not impute customer
+satisfaction for people who did not buy the product. The primary
+difficulty with this option is that it creates missing data in the
+predictors, so the imputer should either remove the predictor from all
+imputation models, or have the missing values propagated through the
+algorithm. Another use case involves imputing cells with observed
+data, a technique called *overimputation*. For example, it may be
+useful to evaluate whether the observed point data fit the imputation
+model. If all is well, we expect the observed data point in the center
+of the multiple imputations. The primary difficulty with this option
+is to ensure that only the observed data (and not the imputed data)
+are used as an outcome in the imputation model. Version `3.0` of
+`mice` includes the `where` argument, a matrix with with logicals that
+has the same dimensions as the data, that indicates where in the data
+the imputations should be created. This matrix can be used to specify
+for each cell whether it should be imputed or not. The default is that
+the missing data are imputed.
+
+### Blocks of variables, hybrid imputation {#sec:blockvar}
+
+An important difference between JM and FCS is that JM imputes all
+variables at once, whereas FCS imputes each variable separately. JM
+and FCS are the extremes scenarios of the much wider range of *hybrid
+imputation models*. In actual data analysis sets of variables are
+often connected in some way. Examples are:
+
+-   A set of scale items and its total score;
+
+-   A variable with one or more transformations;
+
+-   Two variables with one or more interaction terms;
+
+-   A block of normally distributed $Z$-scores;
+
+-   Compositions that add up to a total;
+
+-   Set of variables that are collected together.
+
+Instead of specifying the steps for each variable separately, it is
+more user-friendly to impute these as a block. Version `3.0` of `mice`
+includes a new `block` argument that partitions the complete set of
+variables into blocks. All variables within the same block are jointly
+imputed, which provides a strategy to specify hybrids of JM and FCS.
+The joint models need to be open to accept external covariates. One
+possibility is to use predictive mean matching to impute multivariate
+nonresponse, where the donor values for the variables within the block
+come from the same donor [@LITTLE1988]. The main algorithm in `mice
+3.0` iterates over the blocks rather than the variables. By default,
+each variable is its own block, which gives the familiar behavior.
+
+### Blocks of units, monotone blocks {#sec:blockunit}
+
+Another way to partition the data is to define blocks of units. One
+weakness of the algorithm in box \@ref(def:mice) is that it may become
+unstable when many of the predictors are imputed. @ZHU2016 developed a
+solution called “Block sequential regression multivariate imputation”,
+where units are partitioned into blocks according to the missing data
+pattern. The imputation model for a given variable is modified for
+each block, such that only the observed data with the block can serve
+as predictor. The method generalizes the monotone block approach of
+@LI2014.
+
+### Tile imputation {#sec:tile}
+
+The block-wise partitioning methods are complementary strategies to
+multivariate imputation. The methods in Section \@ref(sec:blockvar)
+partition the columns and apply one model to many outcomes, whereas
+the methods in Section \@ref(sec:blockunit) partition the rows and
+apply many models to one outcome. These operations can be freely
+combined into a whole new class of algorithms based on *tiles*, i.e.,
+combinations of row and column partitions. This is a vast and yet
+unexplored field. I expect that it will be possible to develop
+imputation algorithms that are user-friendly, stable and automatic. A
+major new application of such tile algorithm will be in the imputation
+of combined data. The problem of automatic detection of “optimal
+tiles” provides both enormous challenges and substantial pay-offs.
+
+## Conclusion
+
+Multivariate missing data lead to analytic problems caused by mutual
+dependencies between incomplete variables. The missing data pattern
+provides important information for the imputation model. The influx
+and outflux measures are useful to sift out variables that cannot
+contribute to the imputations. For general missing data patterns, both
+JM and FCS approaches can be used to impute multivariate missing data.
+JM is the model of choice if the data conform to the modeling
+assumptions because it has better theoretical properties. The FCS
+approach is much more flexible, easier to understand and allows for
+imputations close to the data. Automatic tile imputation algorithms
+with simultaneous partitions of rows and columns of the data form a
+vast and unexplored field.
+

@@ -1,0 +1,363 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{book}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Contribution to Wiley StatsRef},
+  pdfauthor={Stef van Buuren},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{booktabs}
+\usepackage[]{natbib}
+\bibliographystyle{apalike}
+
+\title{Contribution to Wiley StatsRef}
+\author{Stef van Buuren}
+\date{2020-11-12}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{1}
+\tableofcontents
+}
+This is a \emph{sample} book written in \textbf{Markdown}. You can use anything that Pandoc's Markdown supports, e.g., a math equation \(a^2 + b^2 = c^2\).
+
+The \textbf{bookdown} package can be installed from CRAN or Github:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{install.packages}\NormalTok{(}\StringTok{"bookdown"}\NormalTok{)}
+\CommentTok{# or the development version}
+\CommentTok{# devtools::install_github("rstudio/bookdown")}
+\end{Highlighting}
+\end{Shaded}
+
+Remember each Rmd file contains one and only one chapter, and a chapter is defined by the first-level heading \texttt{\#}.
+
+To compile this example to PDF, you need XeLaTeX. You are recommended to install TinyTeX (which includes XeLaTeX): \url{https://yihui.org/tinytex/}.
+
+\hypertarget{mice---multivariate-imputation-by-chained-equations}{%
+\chapter{MICE - Multivariate Imputation by Chained Equations}\label{mice---multivariate-imputation-by-chained-equations}}
+
+Multivariate Imputation by Chained Equations (MICE) is an algorithm to create synthetic values (imputations) for multivariate missing data. This article briefly reviews ideas similar to MICE, explains the difference between single and multiple imputation and highlights practical problems in multivariate imputation. The MICE algorithm iteratively imputes the data variable-by-variable. The text discusses the conditions needed for convergence, the issues of compatibility between the complete-data model and the imputation model, the number of iterations, the performance of the algorithm, and potential extensions.
+
+\hypertarget{historic-background}{%
+\section{Historic background}\label{historic-background}}
+
+MICE is an acronym for \emph{Multivariate Imputation by Chained Equations}. The term MICE refers to an algorithm to impute multivariate missing data. The user specifies the distribution of the missing data in each incomplete variable conditional on other data. For example, we could use logistic regression to impute incomplete binary variables, polytomous regression for categorical data, and linear regression for numerical data. The MICE algorithm generates multiple imputations by iteratively drawing values from these conditional distributions. The algorithm was first published as S-PLUS software \citep{VANBUUREN1999B}. In 2006 it became widely available as an R package on CRAN \citep{VANBUUREN2011}. SAS 9.3, SPSS 17.0 and Stata 12 introduced versions of the MICE algorithm in their offerings.
+
+Ideas similar to MICE have surfaced under other names: stochastic relaxation \citep{KENNICKELL1991}, variable-by-variable imputation \citep{BRAND1999}, switching regressions \citep{VANBUUREN1999}, sequential regressions \citep{RAGHUNATHAN2001}, ordered pseudo-Gibbs sampler \citep{HECKERMAN2001}, partially incompatible MCMC \citep{RUBIN2003}, iterated univariate imputation \citep{GELMAN2004}, chained equations \citep{VANBUUREN1999B} and fully conditional specification (FCS) \citep{VANBUUREN2006}. A simple Google search reveals that ``chained equations'' has become the most popular name.
+
+\hypertarget{multiple-imputation}{%
+\section{Multiple imputation}\label{multiple-imputation}}
+
+Multiple imputation \citep{RUBIN1987} is a general method to deal with incomplete data. Many analysts attempt to replace a missing entry by the ``best'' value according to some prediction method, a strategy known as \emph{single imputation}. However, standard errors, confidence intervals and \(P\)-values after single imputation are correct only when all predictions are made without error, which is unrealistic in practice. Rubin realised that replacing the missing value by \emph{one} value cannot be correct in general. His solution was brilliant and straightforward: create multiple imputations that reflect the uncertainty of the unknown value.
+
+\citet{RUBIN1987} describes the workflow in three steps:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Create \(m\) completed datasets;
+\item
+  Estimate the quantities of scientific interest in each complete dataset;
+\item
+  Pool these estimates and their standard errors to a single result.
+\end{enumerate}
+
+The workflow produces estimates with known statistical properties under fairly general conditions.
+
+\hypertarget{practical-problems-in-multivariate-imputation}{%
+\section{Practical problems in multivariate imputation}\label{practical-problems-in-multivariate-imputation}}
+
+In practice, missing data can appear everywhere in the data. The MICE algorithm handles multivariate missing data problems. This section highlights some of the practical problems that we need to address.
+
+Let \(Y\) denote the \(n \times p\) matrix containing the data values on \(p\) variables for all \(n\) units in the sample. We define the \emph{response indicator} \(R\) as a binary \(n \times p\) matrix, where a ``0'' indicates a missing value. Symbol \(Y_j\) is the \(j\)'th column in \(Y\). Symbol \(Y_{-j}\) indicates all columns in \(Y\) except \(Y_j\). Symbols \(Y_j^\mathrm{obs}\) and \(Y_j^\mathrm{mis}\) refer to the observed and missing values in \(Y_j\), respectively.
+
+The basic conditional imputation model \(P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)\) specifies the distribution of the missing values \(Y_j^\mathrm{mis}\) conditional on the observed data in \(Y_j^\mathrm{obs}\), on the remaining data \(Y_j\) and on the response indicator \(R\). If we assume that the missing data are missing at random (MAR), then \(R\) drops out of the model. The rationale for conditioning on \(Y_{-j}\) is that this preserves the relations among the variables in the imputed data.
+
+\citet{VANBUUREN2018} highlighted various practical problems that occur:
+
+\begin{itemize}
+\tightlist
+\item
+  The predictors \(Y_{-j}\) themselves can contain missing values;
+\item
+  ``Circular'' dependence can occur, where \(Y_j^\mathrm{mis}\) depends on \(Y_h^\mathrm{mis}\), and \(Y_h^\mathrm{mis}\) depends on \(Y_j^\mathrm{mis}\) with \(h \neq j\), because in general \(Y_j\) and \(Y_h\) are correlated, even given other variables;
+\item
+  Variables are often of different types (e.g., binary, unordered, ordered, continuous), thereby making the application of theoretically convenient models, such as the multivariate normal, theoretically inappropriate;
+\item
+  Especially with large \(p\) and small \(n\), collinearity or empty cells can occur;
+\item
+  The ordering of the rows and columns can be meaningful, e.g., as in longitudinal data;
+\item
+  The relation between \(Y_j\) and predictors \(Y_{-j}\) can be complicated, e.g., nonlinear, or subject to censoring processes;
+\item
+  Imputation can create impossible combinations, such as pregnant fathers.
+\end{itemize}
+
+This list is by no means exhaustive, and other complexities may appear
+for detailed data.
+
+\hypertarget{sec:MICE}{%
+\section{The MICE algorithm}\label{sec:MICE}}
+
+The MICE algorithm provides an iterative solution to these problems. The procedure consists of the following steps:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Specify an imputation model \(P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)\) for variable \(Y_j\) with \(j=1,\dots,p\).
+\item
+  For each \(j\), fill in starting imputations \(\dot Y_j^0\) by random draws from \(Y_j^\mathrm{obs}\).
+\item
+  Repeat for \(t = 1,\dots,T\).
+\item
+  Repeat for \(j = 1,\dots,p\).
+\item
+  Define \(\dot Y_{-j}^t = (\dot Y_1^t,\dots,\dot Y_{j-1}^t,\dot Y_{j+1}^{t-1},\dots,\dot Y_p^{t-1})\) as the currently complete data except \(Y_j\).
+\item
+  Draw \(\dot\phi_j^t \sim P(\phi_j^t|Y_j^\mathrm{obs}, \dot Y_{-j}^t, R)\).
+\item
+  Draw imputations \(\dot Y_j^t \sim P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, \dot Y_{-j}^t, R, \dot\phi_j^t)\).
+\item
+  End repeat \(j\).
+\item
+  End repeat \(t\).
+\end{enumerate}
+
+The algorithm starts with a random draw from the observed data and imputes the incomplete data in a variable-by-variable fashion. One iteration consists of one cycle through all \(Y_j\). The number of iterations \(T\) can often be low, say 5 or 10. The MICE algorithm generates multiple imputations by executing the procedure in parallel \(m\) times.
+
+\hypertarget{methodology}{%
+\section{Methodology}\label{methodology}}
+
+\hypertarget{mcmc-conditions}{%
+\subsection{MCMC Conditions}\label{mcmc-conditions}}
+
+The MICE algorithm is a Markov chain Monte Carlo (MCMC) method, where the state space is the collection of all imputed values. In order to converge to a stationary distribution, a Markov chain needs to satisfy three critical conditions \citep{ROBERTS1996, TIERNEY1996}:
+
+\begin{itemize}
+\tightlist
+\item
+  \emph{irreducible}, the chain must be able to reach all interesting
+  parts of the state space;
+\item
+  \emph{aperiodic}, the chain should not oscillate between different
+  states;
+\item
+  \emph{recurrence}, all interesting parts can be reached infinitely
+  often, at least from almost all starting points.
+\end{itemize}
+
+Do these properties hold for the MICE algorithm? Irreducibility is generally not a problem since the user has considerable control over the state space. This flexibility is the main attraction of the MICE algorithm.
+
+Periodicity is a potential problem and can arise in a situation where imputation models are inconsistent. A rather artificial example of an oscillatory behavior occurs when \(Y_1\) is imputed by \(Y_2\beta+\epsilon_1\) and \(Y_2\) is imputed by \(-Y_1\beta+\epsilon_2\) for some fixed, nonzero \(\beta\). The sampler will oscillate between two qualitatively different states, so the correlation between \(Y_1\) and \(Y_2\) after imputing \(Y_1\) will differ from that after imputing \(Y_2\). In general, we would like the statistical inferences to be independent of the stopping point. A way to diagnose the \emph{ping-pong} problem, or \emph{order effect}, is to stop the chain at different points. The stopping point should not affect statistical inferences. The addition of noise to create imputations is a safeguard against periodicity and allows the sampler to ``break out'' more easily.
+
+Non-recurrence may also be a potential difficulty, manifesting itself as explosive or non-stationary behaviour. For example, if imputations are created by deterministic functions, the Markov chain may lock up. We may diagnose such from the trace lines of the sampler. As long as we estimate the parameters of imputation models from the data, non-recurrence is mild or absent.
+
+\hypertarget{compatibility}{%
+\subsection{Compatibility}\label{compatibility}}
+
+Gibbs sampling exploits the idea that knowledge of the conditional distributions is sufficient to determine a joint distribution if it exists. The convergence of the MICE algorithm to a (multivariate) joint distribution can be guaranteed when are conditions are known to be \emph{compatible}. For example, when conditional regressions are all linear with a normal residual, the joint corresponds to the multivariate normal distribution.
+
+There is active literature on compatibility. We refer to \citet{VANBUUREN2018} for a more extensive discussion of the topic. \citet{VANBUUREN2006} described a small simulation study using strongly incompatible models. The adverse effects on the estimates after multiple imputation were only minimal in the cases studied. These simulations suggested that the results may be robust against violations of compatibility. \citet{LI2012} presented three examples of problems with MICE. However, their examples differ from the usual sequential regression set up in various ways and do not undermine the validity of the approach \citep{ZHU2015}. \citet{LIU2013} pointed out that application of incompatible conditional models cannot provide imputations from any joint model. However, they also found that Rubin's rules provide consistent point estimates for incompatible models under fairly general conditions, as long as each conditional model was correctly specified. \citet{ZHU2015} showed that incompatibility does not need to lead to divergence. While there is no joint model to converge to, the algorithm can still converge. The key to achieving convergence is that the imputation models should closely model the data. For example, include the skewness of the residuals, or ideally, generate the imputations from the underlying (but usually unknown) mechanism that generated the data.
+
+In the majority of cases, scientific interest will focus on quantities
+that are more remote to the joint density, such as regression weights,
+factor loadings, and prevalence estimates. In such cases, the
+joint distribution is more like a nuisance factor that has no intrinsic
+value.
+
+Apart from potential feedback problems, it appears that incompatibility
+seems like a relatively minor problem in practice, especially if the
+missing data rate is modest, and if the imputation models fit the data well.
+In order to evaluate these aspects, we need to inspect convergence and
+assess the fit of the imputations.
+
+\hypertarget{sec:howlarget}{%
+\subsection{Number of iterations}\label{sec:howlarget}}
+
+When we calculate \(m\) sampling streams in parallel, we may monitor convergence by plotting one or more statistics of interest in each stream against iteration number \(t\). Common statistics to be plotted are the mean and standard deviation of the synthetic data, as well as the correlation between different variables. The pattern should be free of a trend, and the variance within a chain should approximate the variance between chains.
+
+In practice, a low number of iterations appears to be enough. \citet{BRAND1999} and \citet{VANBUUREN1999} set the number of iterations \(T\) relatively low, usually somewhere between 5 to 20 iterations. This number is much lower than in other applications of MCMC methods, which often require thousands of iterations. The imputations form the only memory in the MICE algorithm. Note that the imputed data can have a considerable amount of random noise, depending on the strength of the relations between the variables. Applications of MICE with lowly correlated data, therefore inject much noise into the system. Hence, the autocorrelation over \(t\) will be low, and convergence will be rapid, and in fact, immediate if all variables are independent. Thus, the incorporation of noise into the imputed data has the side-effect of speeding up convergence. Reversely, situations to watch out for occur if:
+
+\begin{itemize}
+\tightlist
+\item
+  the correlations between the \(Y_j\) are high;
+\item
+  the missing data rates are high; or
+\item
+  constraints on parameters across different variables exist.
+\end{itemize}
+
+The first two conditions directly affect the amount of autocorrelation in the system. The latter condition becomes relevant for customised imputation models.
+
+A recent simulation study by \citet{OBERMAN2020} found that conventional convergence diagnostics like \(\hat R\) \citep{GELMAN1991} are too conservative for missing data imputation. When these diagnostics typically indicate convergence after only 30-40 iterations, the parameters estimates achieve their statistical properties between 5 and 10 iterations. It is, however, important not to rely automatically on this result as some applications can require considerably more iterations.
+
+\hypertarget{performance}{%
+\section{Performance}\label{performance}}
+
+The MICE algorithm is extremely flexible as it allows to user to set each conditional density. Most software packages provide reasonable defaults for everyday situations, so the actual effort required from the user may be small. However, it generally pays off to go beyond the default to address particular features in the data or science, like derived variables, interaction terms, skipping pattern, multi-level data and time dependencies.
+
+Many simulation studies provide evidence that MICE algorithm, or similar methodologies, generally yields estimates that are unbiased and that possess appropriate coverage \citep{BRAND1999, RAGHUNATHAN2001, BRAND2003, TANG2005, VANBUUREN2006, HORTON2007, YU2007}. \citet{NAIR2013} summarise their results as
+
+\begin{quote}
+We observe that MICE is overall the best imputation algorithm.
+\end{quote}
+
+\hypertarget{future-work}{%
+\section{Future work}\label{future-work}}
+
+We may extend the MICE algorithm in various ways.
+
+\hypertarget{skipping-imputations-and-overimputation}{%
+\subsection{Skipping imputations and overimputation}\label{skipping-imputations-and-overimputation}}
+
+By default, the MICE algorithm imputes all missing data and leaves the observed data untouched. In some cases, it may also be useful to skip imputation of specific cells. For example, we wish to skip imputation of quality of life for the deceased, or not impute customer satisfaction for people who did not buy the product. The primary difficulty with this option is that it creates missing data in the predictors, so the imputer should either remove the predictor from all imputation models or have the missing values propagated through the algorithm. Another use case involves imputing cells with observed data, a technique called \emph{overimputation}. For example, it may be useful to evaluate whether the observed point data fit the imputation model. If all is well, we expect the observed data point in the centre of the multiple imputations. The primary difficulty with this option is to ensure that we use only the observed data (and not the imputed data) as an outcome in the imputation model. Version \texttt{3.0} of \texttt{mice} includes the \texttt{where} argument. The specification is a matrix with binary values that has the same dimensions as the data, that indicates where MICE should create imputations. We may use this matrix to specify for each cell, whether it should be imputed or not. The default is that the missing data are imputed.
+
+\hypertarget{sec:blockvar}{%
+\subsection{Blocks of variables, hybrid imputation}\label{sec:blockvar}}
+
+The MICE algorithm imputes each variable separately. In some cases, it is useful to impute multiple values simultaneously, as a block. In actual data analysis sets of variables are often connected in some way. Examples are:
+
+\begin{itemize}
+\tightlist
+\item
+  A set of scale items and its total score;
+\item
+  A variable with one or more transformations;
+\item
+  Two variables with one or more interaction terms;
+\item
+  A block of normally distributed \(Z\)-scores;
+\item
+  Compositions that add up to a total;
+\item
+  Set of variables that are collected together.
+\end{itemize}
+
+Instead of specifying the steps for each variable separately, it is more user-friendly to impute these as a block. Version \texttt{3.0} of \texttt{mice} includes a new \texttt{block} argument that partitions the complete set of variables into blocks. All variables within the same block are jointly imputed. The joint models need to be open to accepting external covariates. One possibility is to use predictive mean matching to impute multivariate nonresponse, where the donor values for the variables within the block come from the same donor \citep{LITTLE1988}. The main algorithm in \texttt{mice\ 3.0} iterates over the blocks rather than the variables. By default, each variable is a block, which gives normal behaviour.
+
+\hypertarget{sec:blockunit}{%
+\subsection{Blocks of units, monotone blocks}\label{sec:blockunit}}
+
+Another way to partition the data is to define blocks of units. One weakness of the MICE algorithm is that it may become unstable when many of the predictors are imputed. \citet{ZHU2016} developed a solution called ``Block sequential regression multivariate imputation'', which partitions units into blocks according to the missing data pattern. The imputation model for a given variable is modified for each block, such that only the observed data with the block can serve as a predictor. The method generalises the monotone block approach of \citet{LI2014}.
+
+\hypertarget{separate-training-from-test-data}{%
+\subsection{Separate training from test data}\label{separate-training-from-test-data}}
+
+The MICE algorithm uses all rows in the data to estimate and apply the imputation model. In practice, we sometimes wish to estimate the imputation model on one dataset and apply it to another. The \texttt{ignore} argument to the \texttt{mice()} function specifies the set of rows that MICE will ignore when creating the imputation model. The default is to include all rows. We may use the feature to split the data into a training set (on which the imputation model is built) and a test set (that does not influence the imputation model estimates). The feature is still experimental but is likely to attract interest from the data science and machine learning communities.
+
+\hypertarget{conclusion}{%
+\section{Conclusion}\label{conclusion}}
+
+Multivariate missing data lead to analytic problems caused by mutual dependencies between incomplete variables. For general missing data patterns, the MICE algorithm is a flexible and straightforward procedure that allows for imputed values close to the data.
+
+  \bibliography{fimd2.bib}
+
+\end{document}

@@ -1,0 +1,8 @@
+book_filename: "wileystatsref"
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: "Entry: "
+rmd_files: ["index.Rmd",
+            "Rmd/01-MICE.Rmd",
+            "Rmd/references.Rmd"]
