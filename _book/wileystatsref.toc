@@ -1,0 +1,16 @@
+\contentsline {chapter}{\numberline {1}MICE - Multivariate Imputation by Chained Equations}{5}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Historic background}{5}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Multiple imputation}{6}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Practical problems in multivariate imputation}{6}{section.1.3}%
+\contentsline {section}{\numberline {1.4}The MICE algorithm}{7}{section.1.4}%
+\contentsline {section}{\numberline {1.5}Methodology}{8}{section.1.5}%
+\contentsline {subsection}{\numberline {1.5.1}MCMC Conditions}{8}{subsection.1.5.1}%
+\contentsline {subsection}{\numberline {1.5.2}Compatibility}{9}{subsection.1.5.2}%
+\contentsline {subsection}{\numberline {1.5.3}Number of iterations}{10}{subsection.1.5.3}%
+\contentsline {section}{\numberline {1.6}Performance}{10}{section.1.6}%
+\contentsline {section}{\numberline {1.7}Future work}{11}{section.1.7}%
+\contentsline {subsection}{\numberline {1.7.1}Skipping imputations and overimputation}{11}{subsection.1.7.1}%
+\contentsline {subsection}{\numberline {1.7.2}Blocks of variables, hybrid imputation}{11}{subsection.1.7.2}%
+\contentsline {subsection}{\numberline {1.7.3}Blocks of units, monotone blocks}{12}{subsection.1.7.3}%
+\contentsline {subsection}{\numberline {1.7.4}Separate training from test data}{12}{subsection.1.7.4}%
+\contentsline {section}{\numberline {1.8}Conclusion}{13}{section.1.8}%

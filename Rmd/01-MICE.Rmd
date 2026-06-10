@@ -22,9 +22,11 @@ The workflow produces estimates with known statistical properties under fairly g
 
 ## Practical problems in multivariate imputation
 
+A data item is said to be missing if its value was intended to be established (collected, measured or recorded) by design, but it is not available in the analysed dataset. The problem of missing data is said to be multivariate if missing data items occur for several variables.
+
 In practice, missing data can appear everywhere in the data. The MICE algorithm handles multivariate missing data problems. This section highlights some of the practical problems that we need to address.
 
-Let $Y$ denote the $n \times p$ matrix containing the data values on $p$ variables for all $n$ units in the sample. We define the *response indicator* $R$ as a binary $n \times p$ matrix, where a "0" indicates a missing value. Symbol $Y_j$ is the $j$'th column in $Y$. Symbol $Y_{-j}$ indicates all columns in $Y$ except $Y_j$. Symbols $Y_j^\mathrm{obs}$ and $Y_j^\mathrm{mis}$ refer to the observed and missing values in $Y_j$, respectively. 
+Let $Y$ denote the $n \times p$ matrix containing the data values on $p$ variables for all $n$ units in the sample. We define the *response indicator* $R$ as a binary $n \times p$ matrix, in which a "0" indicates a missing value and a "1" indicates an observed (available) value. Symbol $Y_j$ is the $j$'th column in $Y$. Symbol $Y_{-j}$ indicates all columns in $Y$ except $Y_j$. Symbols $Y_j^\mathrm{obs}$ and $Y_j^\mathrm{mis}$ refer to the observed and missing values in $Y_j$, respectively. 
 
 The basic conditional imputation model $P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)$ specifies the distribution of the missing values $Y_j^\mathrm{mis}$ conditional on the observed data in $Y_j^\mathrm{obs}$, on the remaining data $Y_j$ and on the response indicator $R$. If we assume that the missing data are missing at random (MAR), then $R$ drops out of the model. The rationale for conditioning on $Y_{-j}$ is that this preserves the relations among the variables in the imputed data. 
 
@@ -45,17 +47,25 @@ for detailed data.
 
 The MICE algorithm provides an iterative solution to these problems. The procedure consists of the following steps:
 
-1. Specify an imputation model $P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)$ for variable $Y_j$ with $j=1,\dots,p$.
-2. For each $j$, fill in starting imputations $\dot Y_j^0$ by random draws from $Y_j^\mathrm{obs}$.
-3. Repeat for $t = 1,\dots,T$.
-4. Repeat for $j = 1,\dots,p$.
-5. Define $\dot Y_{-j}^t = (\dot Y_1^t,\dots,\dot Y_{j-1}^t,\dot Y_{j+1}^{t-1},\dots,\dot Y_p^{t-1})$ as the currently complete data except $Y_j$.
-6. Draw $\dot\phi_j^t \sim P(\phi_j^t|Y_j^\mathrm{obs}, \dot Y_{-j}^t, R)$.
-7. Draw imputations $\dot Y_j^t \sim P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, \dot Y_{-j}^t, R, \dot\phi_j^t)$.
-8. End repeat $j$.
-9. End repeat $t$.
+```{=latex}
+\begin{enumerate}
+  \item Specify an imputation model $P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, Y_{-j}, R)$ for variable $Y_j$ with $j=1,\dots,p$.
+  \item For each $j$, fill in initial imputations $\dot{Y}_j^0$ by random draws from $Y_j^\mathrm{obs}$.
+  \item Repeat for $t = 1,\dots,T$.
+  \begin{enumerate}
+    \item[4.] Repeat for $j = 1,\dots,p$.
+    \begin{enumerate}
+      \item[5.] Define $\dot{Y}_{-j}^t = (\dot{Y}_1^t,\dots,\dot{Y}_{j-1}^t,\dot{Y}_{j+1}^{t-1},\dots,\dot{Y}_p^{t-1})$ as the provisionally complete data except for $Y_j$.
+      \item[6.] Draw $\dot{\phi}_j^t \sim P(\phi_j^t|Y_j^\mathrm{obs}, \dot{Y}_{-j}^t, R)$.
+    \end{enumerate}
+    \item[7.] Draw imputations $\dot{Y}_j^t \sim P(Y_j^\mathrm{mis}|Y_j^\mathrm{obs}, \dot{Y}_{-j}^t, R, \dot{\phi}_j^t)$.
+    \item[8.] End repeat $j$.
+  \end{enumerate}
+  \item[9.] End repeat $t$.
+\end{enumerate}
+```
 
-The algorithm starts with a random draw from the observed data and imputes the incomplete data in a variable-by-variable fashion. One iteration consists of one cycle through all $Y_j$. The number of iterations $T$ can often be low, say 5 or 10. The MICE algorithm generates multiple imputations by executing the procedure in parallel $m$ times.
+The algorithm starts with a random draw from the observed data and imputes the incomplete data in a variable-by-variable fashion. One iteration consists of one cycle through all $Y_j$. The number of iterations $T$ can often be low, say 5 or 10. The MICE algorithm generates multiple imputations by executing the procedure in parallel $m$ times, each yielding a completed rectangular $n \times p$ data matrix.
 
 ## Methodology
 
@@ -72,15 +82,15 @@ The MICE algorithm is a Markov chain Monte Carlo (MCMC) method, where the state 
 
 Do these properties hold for the MICE algorithm? Irreducibility is generally not a problem since the user has considerable control over the state space. This flexibility is the main attraction of the MICE algorithm.
 
-Periodicity is a potential problem and can arise in a situation where imputation models are inconsistent. A rather artificial example of an oscillatory behavior occurs when $Y_1$ is imputed by $Y_2\beta+\epsilon_1$ and $Y_2$ is imputed by $-Y_1\beta+\epsilon_2$ for some fixed, nonzero $\beta$. The sampler will oscillate between two qualitatively different states, so the correlation between $Y_1$ and $Y_2$ after imputing $Y_1$ will differ from that after imputing $Y_2$. In general, we would like the statistical inferences to be independent of the stopping point. A way to diagnose the *ping-pong* problem, or *order effect*, is to stop the chain at different points. The stopping point should not affect statistical inferences. The addition of noise to create imputations is a safeguard against periodicity and allows the sampler to "break out" more easily.
+Periodicity is a potential problem and can arise when imputation models are inconsistent. A rather artificial example of an oscillatory behavior occurs when $Y_1$ is imputed by $Y_2\beta+\epsilon_1$ and $Y_2$ is imputed by $-Y_1\beta+\epsilon_2$ for some fixed, nonzero $\beta$. The sampler will oscillate between two qualitatively different states, so the correlation between $Y_1$ and $Y_2$ after imputing $Y_1$ will differ from that after imputing $Y_2$. In general, we would like the statistical inferences to be independent of the stopping rule. A way to diagnose the *ping-pong* problem, or *order effect*, is to stop the chain at different points. The stopping rule should not affect statistical inferences. The addition of noise to create imputations is a safeguard against periodicity and allows the sampler to "break out" more easily.
 
-Non-recurrence may also be a potential difficulty, manifesting itself as explosive or non-stationary behaviour. For example, if imputations are created by deterministic functions, the Markov chain may lock up. We may diagnose such from the trace lines of the sampler. As long as we estimate the parameters of imputation models from the data, non-recurrence is mild or absent.
+Non-recurrence is also a potential problem, manifesting itself as explosive or non-stationary behaviour. For example, if imputations are created by deterministic functions, the Markov chain may lock up. We may discover such a situation from the trace lines of the sampler. As long as we estimate the parameters of imputation models from the data, non-recurrence is mild or absent.
 
 ### Compatibility
 
-Gibbs sampling exploits the idea that knowledge of the conditional distributions is sufficient to determine a joint distribution if it exists. The convergence of the MICE algorithm to a (multivariate) joint distribution can be guaranteed when are conditions are known to be *compatible*. For example, when conditional regressions are all linear with a normal residual, the joint corresponds to the multivariate normal distribution.
+Gibbs sampling exploits the idea that knowledge of the conditional distributions is sufficient to determine the joint distribution if it exists. The convergence of the MICE algorithm to a (multivariate) joint distribution is guaranteed when all the conditional distributions are known to be *compatible*. For example, when all the conditional regressions are linear with normally distributed residuals, the joint corresponds to the multivariate normal distribution.
 
-There is active literature on compatibility. We refer to @VANBUUREN2018 for a more extensive discussion of the topic. @VANBUUREN2006 described a small simulation study using strongly incompatible models. The adverse effects on the estimates after multiple imputation were only minimal in the cases studied. These simulations suggested that the results may be robust against violations of compatibility. @LI2012 presented three examples of problems with MICE. However, their examples differ from the usual sequential regression set up in various ways and do not undermine the validity of the approach [@ZHU2015]. @LIU2013 pointed out that application of incompatible conditional models cannot provide imputations from any joint model. However, they also found that Rubin's rules provide consistent point estimates for incompatible models under fairly general conditions, as long as each conditional model was correctly specified. @ZHU2015 showed that incompatibility does not need to lead to divergence. While there is no joint model to converge to, the algorithm can still converge. The key to achieving convergence is that the imputation models should closely model the data. For example, include the skewness of the residuals, or ideally, generate the imputations from the underlying (but usually unknown) mechanism that generated the data.
+There is active literature on compatibility. We refer to @VANBUUREN2018 for a more extensive discussion of the topic. @VANBUUREN2006 described a small simulation study using strongly incompatible models. The adverse effects on the estimates after multiple imputation were only minimal in the cases studied. These simulations suggested that the results may be robust against violations of compatibility. @LI2012 presented three examples of problems with MICE. However, their examples differ from the usual sequential regression set up in various ways and do not undermine the validity of the approach [@ZHU2015]. @LIU2013 pointed out that application of incompatible conditional models cannot provide imputations from any joint model. However, they also found that Rubin's rules provide consistent point estimates for incompatible models under fairly general conditions, as long as each conditional model is correctly specified. @ZHU2015 showed that incompatibility does not necessarily lead to divergence. While there is no joint model to converge to, the algorithm can still converge. The key to achieving convergence is that the imputation models should closely reflect the data. For example, include the skewness of the residuals, or ideally, generate the imputations from the underlying (but usually unknown) mechanism that generated the data.
 
 In the majority of cases, scientific interest will focus on quantities
 that are more remote to the joint density, such as regression weights,
@@ -88,29 +98,27 @@ factor loadings, and prevalence estimates. In such cases, the
 joint distribution is more like a nuisance factor that has no intrinsic
 value.
 
-Apart from potential feedback problems, it appears that incompatibility
-seems like a relatively minor problem in practice, especially if the
-missing data rate is modest, and if the imputation models fit the data well.
+Apart from potential feedback problems, incompatibility appears to be a relatively minor problem in practice, especially if the rate of missing data is modest, and if the imputation models fit the data well.
 In order to evaluate these aspects, we need to inspect convergence and
-assess the fit of the imputations.
+assess the fit of the imputation models.
 
 ### Number of iterations {#sec:howlarget}
 
-When we calculate $m$ sampling streams in parallel, we may monitor convergence by plotting one or more statistics of interest in each stream against iteration number $t$. Common statistics to be plotted are the mean and standard deviation of the synthetic data, as well as the correlation between different variables. The pattern should be free of a trend, and the variance within a chain should approximate the variance between chains.
+When we calculate $m$ sampling streams in parallel, we may monitor convergence by plotting one or more statistics of interest in each stream against iteration number $t$. Common statistics to be plotted are the mean and standard deviation of the synthetic data, as well as the correlation between different variables. The pattern should be free of any trends, and the variance within a chain should approximate the variance between chains.
 
-In practice, a low number of iterations appears to be enough. @BRAND1999 and @VANBUUREN1999 set the number of iterations $T$ relatively low, usually somewhere between 5 to 20 iterations. This number is much lower than in other applications of MCMC methods, which often require thousands of iterations. The imputations form the only memory in the MICE algorithm. Note that the imputed data can have a considerable amount of random noise, depending on the strength of the relations between the variables. Applications of MICE with lowly correlated data, therefore inject much noise into the system. Hence, the autocorrelation over $t$ will be low, and convergence will be rapid, and in fact, immediate if all variables are independent. Thus, the incorporation of noise into the imputed data has the side-effect of speeding up convergence. Reversely, situations to watch out for occur if:
+In practice, a low number of iterations appears to be enough. @BRAND1999 and @VANBUUREN1999 set the number of iterations $T$ relatively low, usually somewhere between 5 to 20 iterations. This number is much lower than in other applications of MCMC methods, which often require thousands of iterations. The imputations form the only memory in the MICE algorithm. Note that the imputed data can have a considerable amount of random noise, depending on the strength of the relations between the variables. Applications of MICE with weakly correlated data therefore inject a lot of noise into the system. Hence, the autocorrelation over $t$ will be low, and convergence will be rapid, and in fact, immediate if the variables are mutually independent. Thus, the incorporation of noise into the imputed data has the side-effect of speeding up convergence. In contrast, situations to watch out for are:
 
 -   the correlations between the $Y_j$ are high;
 -   the missing data rates are high; or
--   constraints on parameters across different variables exist.
+-   there are constraints on parameters across different variables.
 
-The first two conditions directly affect the amount of autocorrelation in the system. The latter condition becomes relevant for customised imputation models.
+The first two conditions directly affect the amount of autocorrelation in the system. The latter condition is relevant for customised imputation models.
 
-A recent simulation study by @OBERMAN2020 found that conventional convergence diagnostics like $\hat R$ [@GELMAN1991] are too conservative for missing data imputation. When these diagnostics typically indicate convergence after only 30-40 iterations, the parameters estimates achieve their statistical properties between 5 and 10 iterations. It is, however, important not to rely automatically on this result as some applications can require considerably more iterations.
+A recent simulation study by @OBERMAN2020 found that conventional convergence diagnostics like $\hat R$ [@GELMAN1991] are too conservative for missing data imputation. When these diagnostics typically indicate convergence after only 30-40 iterations, the parameter estimates achieve their desired statistical properties between 5 and 10 iterations. It is, however, important not to rely uncritically on this result as some applications can require considerably more iterations.
 
 ## Performance {#performance}
 
-The MICE algorithm is extremely flexible as it allows to user to set each conditional density. Most software packages provide reasonable defaults for everyday situations, so the actual effort required from the user may be small. However, it generally pays off to go beyond the default to address particular features in the data or science, like derived variables, interaction terms, skipping pattern, multi-level data and time dependencies.
+The MICE algorithm is extremely flexible as it allows the user to set each conditional density. Most software packages provide reasonable defaults for everyday situations, so the actual effort required from the user may be small. However, it generally pays off to go beyond the default and address particular features in the data or science, like derived variables, interaction terms, skipping pattern, multi-level data and time dependencies.
 
 Many simulation studies provide evidence that MICE algorithm, or similar methodologies, generally yields estimates that are unbiased and that possess appropriate coverage [@BRAND1999; @RAGHUNATHAN2001; @BRAND2003; @TANG2005; @VANBUUREN2006; @HORTON2007; @YU2007]. @NAIR2013 summarise their results as
 
@@ -122,7 +130,9 @@ We may extend the MICE algorithm in various ways.
 
 ### Skipping imputations and overimputation
 
-By default, the MICE algorithm imputes all missing data and leaves the observed data untouched. In some cases, it may also be useful to skip imputation of specific cells. For example, we wish to skip imputation of quality of life for the deceased, or not impute customer satisfaction for people who did not buy the product. The primary difficulty with this option is that it creates missing data in the predictors, so the imputer should either remove the predictor from all imputation models or have the missing values propagated through the algorithm. Another use case involves imputing cells with observed data, a technique called *overimputation*. For example, it may be useful to evaluate whether the observed point data fit the imputation model. If all is well, we expect the observed data point in the centre of the multiple imputations. The primary difficulty with this option is to ensure that we use only the observed data (and not the imputed data) as an outcome in the imputation model. Version `3.0` of `mice` includes the `where` argument. The specification is a matrix with binary values that has the same dimensions as the data, that indicates where MICE should create imputations. We may use this matrix to specify for each cell, whether it should be imputed or not. The default is that the missing data are imputed.
+By default, the MICE algorithm imputes all missing data and leaves the observed data untouched. In some cases, it may also be useful to skip imputation of specific cells. For example, we wish to skip imputation of quality of life for the deceased, or not impute customer satisfaction for people who did not buy the product. Another option is to introduce a special code for the variable, such as "N/A" indicating "Not applicable". This "Not applicable" value is then treated as a bona-fide observed value and not imputed. This approach is straightforward for categorical variables, where "N/A" is simply an additional category, but less so for continuous variables, where it fundamentally changes the measurement scale. The primary difficulty with skipping is that it creates missing data in the predictors, so the imputer should either remove the predictor from all imputation models or have the missing values propagated through the algorithm. 
+
+Another use case involves imputing cells with observed data, a technique called *overimputation*. For example, it may be useful to evaluate whether the observed point data fit the imputation model. If all is well, we expect the observed data point in the centre of the multiple imputations. The primary difficulty with this option is to ensure that we use only the observed data (and not the imputed data) as an outcome in the imputation model. Version `3.0` of `mice` includes the `where` argument. The specification is a matrix with binary values that has the same dimensions as the data, that indicates where MICE should create imputations. We may use this matrix to specify for each cell, whether it should be imputed or not. The default is that the missing data are imputed.
 
 ### Blocks of variables, hybrid imputation {#sec:blockvar}
 
@@ -133,9 +143,10 @@ The MICE algorithm imputes each variable separately. In some cases, it is useful
 -   Two variables with one or more interaction terms;
 -   A block of normally distributed $Z$-scores;
 -   Compositions that add up to a total;
--   Set of variables that are collected together.
+-   Set of variables that are collected together;
+-   Sets of variables that are highly or perfectly correlated.
 
-Instead of specifying the steps for each variable separately, it is more user-friendly to impute these as a block. Version `3.0` of `mice` includes a new `block` argument that partitions the complete set of variables into blocks. All variables within the same block are jointly imputed. The joint models need to be open to accepting external covariates. One possibility is to use predictive mean matching to impute multivariate nonresponse, where the donor values for the variables within the block come from the same donor [@LITTLE1988]. The main algorithm in `mice 3.0` iterates over the blocks rather than the variables. By default, each variable is a block, which gives normal behaviour.
+Instead of specifying the steps for each variable separately, it is more user-friendly to impute these as a block. Version `3.0` of `mice` includes a new `block` argument that partitions the complete set of variables into blocks. All variables within the same block are jointly imputed. The joint models need to be open to accepting external covariates. One possibility is to use predictive mean matching to impute multivariate nonresponse, where the donor values for the variables within the block come from the same donor [@LITTLE1988]. The main algorithm in `mice 3.0` iterates over the blocks rather than the variables. By default, each variable is a block, which gives standard behaviour.
 
 ### Blocks of units, monotone blocks {#sec:blockunit}
 
@@ -147,5 +158,5 @@ The MICE algorithm uses all rows in the data to estimate and apply the imputatio
 
 ## Conclusion
 
-Multivariate missing data lead to analytic problems caused by mutual dependencies between incomplete variables. For general missing data patterns, the MICE algorithm is a flexible and straightforward procedure that allows for imputed values close to the data.
+Multivariate missing data lead to analytic problems caused by mutual dependencies among incompletely observed variables. For general missing data patterns, the MICE algorithm is a flexible and straightforward procedure that generates imputations with which the originally specified targets can be estimated without bias, provided that the estimator applied to the completed datasets is also unbiased.
 
